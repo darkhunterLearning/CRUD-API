@@ -12,5 +12,10 @@
   flask run
 ```
 **RESULT**
-![](https://github.com/darkhunterLearning/CRUD-API/blob/main/images/App_Run.png)
-*App Run*
+![]()
+<p align="center">
+  <img width="200" height="200" src="https://github.com/darkhunterLearning/CRUD-API/blob/main/images/App_Run.png" alt="App Run">
+</p>
+<p align="center">
+    App Run
+</p>
