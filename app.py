@@ -1,12 +1,14 @@
 # import lib
-import requests
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request, abort, make_response
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS, cross_origin
-import os
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+
 
 app = Flask(__name__)
-CORS(app)
+jwt = JWTManager(app)
+
+
+app.config['SECRET_KEY'] = 'secretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:123456@localhost/customers'
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -20,26 +22,19 @@ class Customer(db.Model):
     customer_name = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(100), nullable=False)
     customer_address = db.Column(db.String(100), nullable=False)
-
-    def __repr__(self):
-        return "<Customer %r>" % self.customer_name
-
-    def __init__(self, customer_name, customer_phone, customer_address):
-        self.customer_name = customer_name
-        self.customer_phone = customer_phone
-        self.customer_address = customer_address
+    password = db.Column(db.String(100))
 
 db.create_all()
 
+
 # Run app
-@cross_origin()
 @app.route('/')
 def index():
     return jsonify({"message":"Hello World!"})
 
 # Get all customer
-@cross_origin()
 @app.route('/getcustomers', methods=['GET'])
+@jwt_required()
 def getcustomers():
      all_customers = []
      customers = Customer.query.all()
@@ -48,7 +43,8 @@ def getcustomers():
                     "customer_id":customer.id,
                     "customer_name":customer.customer_name,
                     "customer_phone":customer.customer_phone,
-                    "customer_address":customer.customer_address}
+                    "customer_address":customer.customer_address,
+                    "password":customer.password}
           all_customers.append(results)
 
      return jsonify(
@@ -60,24 +56,50 @@ def getcustomers():
         )
 
 # Create new customer
-@cross_origin()
 @app.route('/customers', methods = ['POST'])
 def create_customer():
-    customer_data = request.json
+    customer_phone = request.form["customer_phone"]
+    test = Customer.query.filter_by(customer_phone=customer_phone).first()
+    if test:
+        return jsonify(message="User Already Exist"), 409
+    else:
+        customer_name = request.form["customer_name"]
+        customer_phone = request.form["customer_phone"]
+        customer_address = request.form["customer_address"]
+        password = request.form["password"]
+        customer = Customer(customer_name=customer_name, customer_phone=customer_phone, customer_address=customer_address, password=password)
+        db.session.add(customer)
+        db.session.commit()
+        return jsonify(message="User added sucessfully"), 201
 
-    customer_name = customer_data['customer_name']
-    customer_phone = customer_data['customer_phone']
-    customer_address = customer_data['customer_address']
-    
-    customer = Customer(customer_name=customer_name, customer_phone=customer_phone, customer_address=customer_address)
-    db.session.add(customer)
-    db.session.commit()
-    
-    return jsonify({"success": True,"response":"customer added"})
+# Log-in to get JWT
+# route for logging user in
+@app.route('/login', methods =['POST'])
+def login_user():
+   # creates dictionary of form data
+    auth = request.form
+  
+    if not auth or not auth.get('customer_phone') or not auth.get('password'):
+        # returns 401 if any customer_phone or / and password is missing
+        return make_response(
+            'Could not verify',
+            401,
+            {'WWW-Authenticate' : 'Basic realm ="Login required !!"'}
+        )
+  
+    user = Customer.query\
+        .filter_by(customer_phone=auth.get('customer_phone'))\
+        .first()
+  
+    if user:
+        access_token = create_access_token(identity=auth.get('customer_phone'))
+        return jsonify(message="Login Succeeded!", access_token=access_token), 201
+    else:
+        return jsonify(message="Invalid!"), 401
 
 # Get single customer by Id
-@cross_origin()
 @app.route('/customers/<id>', methods=['GET'])
+@jwt_required()
 def get_customer(id):
   customer = Customer.query.get(id)
 
@@ -91,8 +113,8 @@ def get_customer(id):
             )
 
 # Update Customer's Information ---- Only update phone & address
-@cross_origin()
 @app.route('/customers/<id>', methods=['PATCH'])
+@jwt_required()
 def update_customer(id):
   customer = Customer.query.get(id)
   customer_phone = request.json['customer_phone']
@@ -110,11 +132,12 @@ def update_customer(id):
 
 # Delete Customer by Id
 @app.route('/customers/<id>', methods=['DELETE'])
+@jwt_required()
 def delete_customer(id):
   db.session.query(Customer).filter_by(id=id).delete()
   db.session.commit()
   return jsonify({"success": True, "reponse": "Customer deleted"})
-
+    
 
 if __name__ == '__main__':
   app.run(debug=True)
