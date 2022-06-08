@@ -56,6 +56,18 @@
   <i> Get All Customer Without Using JWT After Create 3 Customers </i>
 </p>
 <p align="center">
+  <img src="https://github.com/darkhunterLearning/CRUD-API/blob/main/images/Update_1st_Customer_Info.png" alt="Update 1st Customer's Info">
+</p>
+<p align="center">
+  <i> Update 1st Customer's Info </i>
+</p>
+<p align="center">
+  <img src="https://github.com/darkhunterLearning/CRUD-API/blob/main/images/Delete_1st_Customer.png" alt="Delete 1st Customer's Info">
+</p>
+<p align="center">
+  <i> Delete 1st Customer's Info </i>
+</p>
+<p align="center">
   <img src="https://github.com/darkhunterLearning/CRUD-API/blob/main/images/JWT_Login.png" alt="Login using JWT">
 </p>
 <p align="center">
