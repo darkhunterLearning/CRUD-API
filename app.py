@@ -75,6 +75,21 @@ def create_customer():
     
     return jsonify({"success": True,"response":"customer added"})
 
+# Get single customer by Id
+@cross_origin()
+@app.route('/customers/<id>', methods=['GET'])
+def get_customer(id):
+  customer = Customer.query.get(id)
+
+  return jsonify(
+                {
+                    "customer_id":customer.id,
+                    "customer_name":customer.customer_name,
+                    "customer_phone":customer.customer_phone,
+                    "customer_address":customer.customer_address
+                }
+            )
+
 
 if __name__ == '__main__':
   app.run(debug=True)
