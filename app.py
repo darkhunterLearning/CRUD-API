@@ -35,7 +35,7 @@ db.create_all()
 @cross_origin()
 @app.route('/')
 def index():
-    return jsonify({"message":"Hello World"})
+    return jsonify({"message":"Hello World!"})
 
 # Get all customer
 @cross_origin()
@@ -47,8 +47,8 @@ def getcustomers():
           results = {
                     "customer_id":customer.id,
                     "customer_name":customer.customer_name,
-                    "customer_phone":customer.customer_age,
-                    "customer_address":customer.customer_type }
+                    "customer_phone":customer.customer_phone,
+                    "customer_address":customer.customer_address}
           all_customers.append(results)
 
      return jsonify(
@@ -58,5 +58,23 @@ def getcustomers():
                 "total_customers": len(customers),
             }
         )
+
+# Create new customer
+@cross_origin()
+@app.route('/customers', methods = ['POST'])
+def create_customer():
+    customer_data = request.json
+
+    customer_name = customer_data['customer_name']
+    customer_phone = customer_data['customer_phone']
+    customer_address = customer_data['customer_address']
+    
+    customer = Customer(customer_name=customer_name, customer_phone=customer_phone, customer_address=customer_address)
+    db.session.add(customer)
+    db.session.commit()
+    
+    return jsonify({"success": True,"response":"customer added"})
+
+
 if __name__ == '__main__':
   app.run(debug=True)
