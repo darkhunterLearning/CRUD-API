@@ -108,5 +108,13 @@ def update_customer(id):
       db.session.commit()
       return jsonify({"success": True, "reponse": "Customer's Infomation Updated"})
 
+# Delete Customer by Id
+@app.route('/customers/<id>', methods=['DELETE'])
+def delete_customer(id):
+  db.session.query(Customer).filter_by(id=id).delete()
+  db.session.commit()
+  return jsonify({"success": True, "reponse": "Customer deleted"})
+
+
 if __name__ == '__main__':
   app.run(debug=True)
