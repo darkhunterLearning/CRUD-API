@@ -1,6 +1,6 @@
 # import lib
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
 import os
@@ -90,6 +90,23 @@ def get_customer(id):
                 }
             )
 
+# Update Customer's Information ---- Only update phone & address
+@cross_origin()
+@app.route('/customers/<id>', methods=['PATCH'])
+def update_customer(id):
+  customer = Customer.query.get(id)
+  customer_phone = request.json['customer_phone']
+  customer_address = request.json['customer_address']
+
+  if customer is None:
+      abort(404)
+
+  else:
+      customer.customer_phone = customer_phone
+      customer.customer_address = customer_address
+      db.session.add(customer)
+      db.session.commit()
+      return jsonify({"success": True, "reponse": "Customer's Infomation Updated"})
 
 if __name__ == '__main__':
   app.run(debug=True)
